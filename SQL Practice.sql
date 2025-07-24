@@ -78,3 +78,41 @@ FROM sql_practice1
 WHERE category='Beauty'
 GROUP BY category
 
+--- sales are more than 1000
+
+SELECT *
+FROM sql_practice1
+WHERE total_sale > 1000
+
+--- total number of transactions by each gender by each category
+
+
+SELECT gender, category, COUNT(transactions_id)
+FROM sql_practice1
+GROUP BY gender, Category
+-----
+with hty as 
+(
+SELECT gender, category, 
+COUNT(transactions_id) OVER(PARTITION BY gender, category) AS mty
+FROM sql_practice1
+)
+SELECT gender, category, MAX(mty)
+FROM hty
+
+GROUP BY gender, category
+----
+--- sum of sales by category and gender but retaining all rows
+
+with hty as 
+(
+SELECT *, 
+SUM(total_sale) OVER(PARTITION BY category) AS mty
+FROM sql_practice1
+)
+SELECT gender, category, MAX(mty)
+FROM hty
+
+GROUP BY gender, category
+
+
