@@ -164,7 +164,52 @@ SELECT
 	RANK() OVER (PARTITION BY EXTRACT(YEAR FROM sale_date) ORDER BY AVG(total_sale) DESC ) as rank
 	FROM sql_practice1
 	GROUP BY EXTRACT(YEAR FROM sale_date), EXTRACT(MONTH FROM sale_date)
-	) AS t1
+	) 
 
 WHERE rank=1
 ORDER BY year DESC
+----top 5 customers based on the highest total sales. 
+
+SELECT *
+FROM sql_practice1
+
+with top_customers AS(
+SELECT customer_id, SUM(total_sale),
+RANK() OVER( ORDER BY SUM(total_sale) DESC) as rank
+
+FROM sql_practice1
+GROUP BY customer_id) 
+SELECT * 
+FROM top_customers
+WHERE rank <6
+
+----without using window function--
+
+SELECT customer_id, SUM(total_sale) AS total_sales
+
+FROM sql_practice1
+GROUP BY customer_id
+ORDER BY total_sales DESC
+
+LIMIT 5
+
+--------- unique customers who purchase an item from each category
+
+SELECT category, COUNT(DISTINCT customer_id
+FROM sql_practice1
+GROUP BY category
+
+--- number of orders by each shift
+
+with sales_shift as(
+SELECT quantiy, sale_time,
+CASE 
+	WHEN EXTRACT(HOUR FROM sale_time) <= 12 THEN 'Morning Shift'
+	 WHEN EXTRACT(HOUR FROM sale_time) > 12 AND EXTRACT(HOUR FROM sale_time) <=17  THEN 'Afternoon Shift'
+	 ELSE 'Evening Shift'
+END as shift
+FROM sql_practice1)
+
+SELECT shift, COUNT(quantiy) as total_orders
+FROM sales_shift
+GROUP BY shift
