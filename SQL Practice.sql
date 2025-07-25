@@ -135,7 +135,7 @@ FROM fgh
 GROUP BY yr, mth
 ORDER BY MAX(avg_sales) DESC
 
------
+-----using window function and CTE
 WITH monthly_avg AS(
 SELECT TO_CHAR(sale_date, 'yyyy') AS yr , TO_CHAR(sale_date, 'mm'), TO_CHAR(sale_date, 'yyyy-mm'), 
 ROUND(AVG(total_sale)::numeric,2) AS avg_sales
@@ -152,3 +152,19 @@ SELECT *
 FROM rank_sales
 WHERE rnk=1
 ORDER BY yr
+
+__----____using subqueries and window function
+
+SELECT year, month, avg_sales
+FROM(
+SELECT
+	EXTRACT(YEAR FROM sale_date) AS year,
+	EXTRACT(MONTH FROM sale_date) AS month,
+	AVG(total_sale) AS avg_sales,
+	RANK() OVER (PARTITION BY EXTRACT(YEAR FROM sale_date) ORDER BY AVG(total_sale) DESC ) as rank
+	FROM sql_practice1
+	GROUP BY EXTRACT(YEAR FROM sale_date), EXTRACT(MONTH FROM sale_date)
+	) AS t1
+
+WHERE rank=1
+ORDER BY year DESC
