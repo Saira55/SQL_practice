@@ -115,4 +115,40 @@ FROM hty
 
 GROUP BY gender, category
 
+-----------USing INDEX for optimization
+CREATE INDEX idx_cat_sale ON sql_practice1(category, sale_date);
 
+EXPLAIN ANALYZE
+SELECT *, 
+       SUM(total_sale) OVER(PARTITION BY category) AS mty
+FROM sql_practice1;
+---
+----avg sales for each month and then best selling monthfor each year
+
+with fgh as(
+SELECT TO_CHAR(sale_date, 'YYYY') AS yr, TO_CHAR(sale_date, 'Month') AS mth, 
+AVG (total_sale) OVER (PARTITION BY TO_CHAR(sale_date, 'YYYY-mm')) AS avg_sales
+FROM sql_practice1)
+
+SELECT yr, mth, MAX(avg_sales)
+FROM fgh
+GROUP BY yr, mth
+ORDER BY MAX(avg_sales) DESC
+
+-----
+WITH monthly_avg AS(
+SELECT TO_CHAR(sale_date, 'yyyy') AS yr , TO_CHAR(sale_date, 'mm'), TO_CHAR(sale_date, 'yyyy-mm'), 
+ROUND(AVG(total_sale)::numeric,2) AS avg_sales
+FROM sql_practice1
+GROUP BY TO_CHAR(sale_date, 'yyyy'), TO_CHAR(sale_date, 'mm'), TO_CHAR(sale_date, 'yyyy-mm')
+),
+rank_sales AS(
+SELECT *, RANK() OVER(PARTITION BY yr ORDER BY avg_sales DESC) AS rnk
+
+FROM monthly_avg
+)
+
+SELECT *
+FROM rank_sales
+WHERE rnk=1
+ORDER BY yr
